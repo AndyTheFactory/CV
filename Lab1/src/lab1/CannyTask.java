@@ -5,9 +5,11 @@
  */
 package lab1;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import javax.imageio.ImageIO;
 
 /**
@@ -15,10 +17,13 @@ import javax.imageio.ImageIO;
  * @author andrei
  */
 public class CannyTask {
+    public static final int UPPER_THRESHOLD=60;
+    public static final int LOWER_THRESHOLD=30;
+    private static File file;
     public static void doTask() throws IOException
     {
-        File file=Lab1Helper.getImageFile();
-        
+        file=Lab1Helper.getImageFile();
+
         GaussianFilter g;
         
         g=new GaussianFilter(3, 1);
@@ -31,20 +36,258 @@ public class CannyTask {
         
         System.out.println(String.format("Gaussian done - %s",outfile.getAbsoluteFile()));
         
+        Gradient grad=new Gradient(image_out.getWidth(), image_out.getHeight());
+        grad.debug=true;
         
+        grad.doGradient(image_out);
     }
     
 }
 
 class Gradient{
     int[][] direction;
-    float[][] gradient;
+    double[][] gradient;
+    boolean debug=false;
     public Gradient(int width,int height){
         direction = new int[width][height];
-        gradient= new float[width][height];
+        gradient= new double[width][height];
         
     }
     public void doGradient(BufferedImage img){
+        int[][] gradientX, gradientY;
+        SobelFilterX gX=new SobelFilterX();
+        SobelFilterY gY=new SobelFilterY();
+        boolean hasAlpha=img.getAlphaRaster()!=null;
+        //do grayscale
+        for(int i=0;i<img.getWidth();i++)
+            for (int j=0;j<img.getHeight();j++)
+            {
+                int p = img.getRGB(i,j);
+          
+                int a = hasAlpha?((p>>24)&0xff):0;
+                int r = (p>>16)&0xff;
+                int g = (p>>8)&0xff;
+                int b = p&0xff;
+                int avg=(r+g+b)/3;
+                
+                p =  (a<<24) | (avg<<16) | (avg<<8) | avg;
+                img.setRGB(i, j, p);
+            }
+        gradientX=gX.applyFilter(img, ImageFilter.CHANNEL_RED);
+        gradientY=gY.applyFilter(img, ImageFilter.CHANNEL_RED);
+        if (debug){
+            try{                
+                BufferedImage gradientImgX=gX.applyFilter(img);
+                BufferedImage gradientImgY=gY.applyFilter(img);
+                ImageIO.write(img,"jpg",  new File("c:\\gray.jpg"));
+                ImageIO.write(gradientImgX,"jpg",  new File("c:\\gradx.jpg"));
+                ImageIO.write(gradientImgY,"jpg",  new File("c:\\gradyy.jpg"));
+
+            }catch (IOException E){
+                System.out.println("Hau! nu pot scrie fisierele");
+            }
+        }
+         for(int i=0;i<img.getWidth();i++)
+            for (int j=0;j<img.getHeight();j++)
+            {
+                int GradX=gradientX[i][j];
+                int GradY=gradientY[i][j];
+                gradient[i][j]=Math.sqrt(
+                    GradX*GradX+GradY*GradY
+                );
+                
+                double dirAngle=(Math.atan2(GradX,GradY)/Math.PI)*180;
+                direction[i][j]=angleToDir(dirAngle);
+                
+                
+            }
+        BufferedImage edge1=findEdges();
+        if (debug){
+            try{
+                ImageIO.write(edge1,"jpg",  new File("c:\\edge1.jpg"));
+
+            }catch (IOException E){
+                System.out.println("Hau! nu pot scrie fisierele");
+            }
+        }
+        BufferedImage edge2=new BufferedImage(edge1.getWidth(), edge1.getHeight(), edge1.getType());
+        edge2.setData(edge1.getData());
         
+        suppressNonMaxEdgess(edge1);
+        if (debug){
+            try{
+                ImageIO.write(edge1,"jpg",  new File("c:\\edge2.jpg"));
+
+            }catch (IOException E){
+                System.out.println("Hau! nu pot scrie fisierele");
+            }
+        }
+        suppressNonMaxGradient();
+
+        int w=gradient.length;
+        int h=gradient[0].length;
+        for(int i=0;i<w;i++)
+            for(int j=0;j<h;j++)
+                id
+        
+    }
+    
+    public static int angleToDir(double Angle){		
+        
+          
+        if ( ( (Angle < 22.5) && (Angle > -22.5) ) || (Angle > 157.5) || (Angle < -157.5) )
+		return 0;
+        if ( ( (Angle > 22.5) && (Angle < 67.5) ) || ( (Angle < -112.5) && (Angle > -157.5) ) )
+                return 45;
+        if ( ( (Angle > 67.5) && (Angle < 112.5) ) || ( (Angle < -67.5) && (Angle > -112.5) ) )
+                return 90;
+        if ( ( (Angle > 112.5) && (Angle < 157.5) ) || ( (Angle < -22.5) && (Angle > -67.5) ) )
+               return 135;
+				
+        return 0;
+        
+    }
+    private BufferedImage findEdges()
+    {
+        int w=gradient.length;
+        int h=gradient[0].length;
+        
+        BufferedImage edger = new BufferedImage(w, h, BufferedImage.TYPE_BYTE_BINARY);
+        
+        for(int i=0;i<w;i++)
+            for(int j=0;j<h;j++)
+            {
+                if(gradient[i][j]>CannyTask.UPPER_THRESHOLD){
+                    switch(direction[i][j]){
+                        case 0:
+                        case 45:
+                        case 90:
+                        case 135:
+                            followEdge(i,j,direction[i][j],edger);
+                            break;
+                        default:
+                            edger.setRGB(i, j, 0);                            
+                    }
+                }else{
+                    edger.setRGB(i, j, 0);
+                }
+            }
+        return edger;
+    }
+    private void followEdge(int x, int y, int dir, BufferedImage edger)    
+    {
+        int deltax=(dir==0)?0:1;
+        int deltay=(dir==90)?0:1*((int)Math.signum(134-dir)); // -1 for 135
+        
+        int nX=x+deltax,nY=y+deltay;
+        boolean boundsOk=(nX>=0)&&(nX<gradient.length)&&
+                    (nY>0)&&(nY<gradient[0].length);
+        while (boundsOk && direction[nX][nY]==dir && gradient[nX][nY]>CannyTask.LOWER_THRESHOLD){
+            edger.setRGB(nX, nY, Color.WHITE.getRGB());
+            nX+=deltax;
+            nY+=deltay;
+            boundsOk=(nX>=0)&&(nX<gradient.length)&&
+                        (nY>0)&&(nY<gradient[0].length);
+            
+        }
+    }
+     private void suppressNonMaxEdgess(BufferedImage edger)
+    {
+        int w=gradient.length;
+        int h=gradient[0].length;
+        
+        
+        for(int i=0;i<w;i++)
+            for(int j=0;j<h;j++)
+            {
+                if(edger.getRGB(i, j)==Color.WHITE.getRGB()){
+                    switch(direction[i][j]){
+                        case 0:
+                        case 45:
+                        case 90:
+                        case 135:
+                            supressNonMax(i,j,direction[i][j],edger);
+                            break;
+                        default:
+                    }
+                }
+            }
+    }
+    private void supressNonMax(int x, int y, int dir, BufferedImage edger)
+    {
+        int deltax=(dir==90)?0:1;
+        int deltay=(dir==0)?0:(dir==45?-1:1); // -1 for 45
+        class Pixel{
+            int x,y;
+            double gradient;
+            public Pixel(int x,int y,double gradient){
+                this.x=x;this.y=y;this.gradient=gradient;
+            }
+        }
+        ArrayList<Pixel> pxlist=new ArrayList<>();
+        int nX=x+deltax,nY=y+deltay;
+        boolean boundsOk=(nX>=0)&&(nX<gradient.length)&&
+                    (nY>0)&&(nY<gradient[0].length);
+        
+         while (boundsOk && direction[nX][nY]==dir && edger.getRGB(nX, nY)==Color.WHITE.getRGB()){
+            pxlist.add(new Pixel(nX,nY,gradient[nX][nY]));
+            nX+=deltax;
+            nY+=deltay;
+            boundsOk=(nX>=0)&&(nX<gradient.length)&&
+                        (nY>0)&&(nY<gradient[0].length);
+            
+        }
+        deltax*=-1;
+        deltay*=-1;
+        nX=x+deltax;
+        nY=y+deltay;
+        boundsOk=(nX>=0)&&(nX<gradient.length)&&
+                    (nY>0)&&(nY<gradient[0].length);
+
+        while (boundsOk && direction[nX][nY]==dir && edger.getRGB(nX, nY)==Color.WHITE.getRGB()){
+            pxlist.add(new Pixel(nX,nY,gradient[nX][nY]));
+            nX+=deltax;
+            nY+=deltay;
+            boundsOk=(nX>=0)&&(nX<gradient.length)&&
+                        (nY>0)&&(nY<gradient[0].length);
+            
+        }
+        double maxgrad=0;
+        for(Pixel px:pxlist){
+            maxgrad=px.gradient>maxgrad?px.gradient:maxgrad;
+        }
+        for(Pixel px:pxlist){
+            if (maxgrad>=px.gradient+10){
+                edger.setRGB(px.x, px.y, 0);
+            }
+        }
+        
+    }
+    private void suppressNonMaxGradient()
+    {
+        int w=gradient.length;
+        int h=gradient[0].length;
+        for(int i=0;i<w;i++)
+            for(int j=0;j<h;j++)
+            {
+                double g1,g2;
+                if(gradient[i][j]!=0){
+                    int deltax=(direction[i][j]==0)?0:1;
+                    int deltay=(direction[i][j]==90)?0:1*((int)Math.signum(134-direction[i][j])); // -1 for 135
+                    int nX=i+deltax,nY=j+deltay;
+                    boolean boundsOk=(nX>=0)&&(nX<gradient.length)&&
+                                (nY>0)&&(nY<gradient[0].length);
+                    g1=boundsOk?gradient[nX][nY]:0;
+                    nX=i-deltax;
+                    nY=j-deltay;
+                    boundsOk=(nX>=0)&&(nX<gradient.length)&&
+                                (nY>0)&&(nY<gradient[0].length);
+                    g2=boundsOk?gradient[nX][nY]:0;
+                    
+                    if (g1>gradient[i][j] || g2>gradient[i][j]){
+                        gradient[i][j]=0;//suppress non maxima
+                    }
+                }
+            }
     }
 }

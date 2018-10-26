@@ -31,7 +31,7 @@ public class Lab1 {
             case 2: CannyTask.doTask();                
                 break;
             case 3:
-                System.out.println("not implemented");
+                MatchingTask.doTask();
                 break;
         }
         

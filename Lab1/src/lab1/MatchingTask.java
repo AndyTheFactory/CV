@@ -5,6 +5,7 @@
  */
 package lab1;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
@@ -21,5 +22,15 @@ public class MatchingTask
         file=Lab1Helper.getMaskFile();
         
     }
-
+    private BufferedImage makeHeatMap(BufferedImage src,BufferedImage mask)
+    {
+        int w=src.getWidth(),h=src.getHeight();
+        BufferedImage res=new BufferedImage(w, h, src.getType());
+        
+        for(int i=0;i<w;i++)
+            for(int j=0;j<h;j++){
+                res.setRGB(i, j, 0);
+            }
+        return res;
+    }
 }

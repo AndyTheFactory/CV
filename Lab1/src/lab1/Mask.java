@@ -7,12 +7,19 @@ package lab1;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 /**
  *
  * @author Dell
  */
 public class Mask {
     double[][] mask;
+    public Mask(File maskFile) throws IOException
+    {
+        this(ImageIO.read(maskFile));
+    }
     public Mask(BufferedImage maskImage){
         mask=new double[maskImage.getWidth()][maskImage.getHeight()];
         for(int i=0;i<mask.length;i++)
@@ -23,11 +30,27 @@ public class Mask {
         if(x>=img.getWidth() || y>=img.getHeight())
             return 0;
         
-        byte[] pixels=((DataBufferByte) img.getDatane(new Rectangle(x,y,mask.length,mask[0].length)).getDataBuffer()).getData();
-       
-        double[][] imgrect=new deouble[mask.length][mask[0].length];
+        boolean withAlphachan=img.getAlphaRaster()!=null;        
+        byte[] pixels=((DataBufferByte) img.getData(new Rectangle(x,y,mask.length,mask[0].length)).getDataBuffer()).getData();
+
+        int res=0;
         
-        for(i=0;pixels.length)
-        
+        for(int i=0,mx=0,my=0;i<pixels.length;mx++){
+            if(mx>=mask.length){
+                mx=0;
+                my++;
+            }
+            int alpha=withAlphachan?(pixels[i++] & 0xff):0;
+            int blue=(pixels[i++] & 0xff),
+                green=(pixels[i++] & 0xff),
+                red=(pixels[i++] & 0xff);
+            res+=alpha<<24;
+            res+=(int)(blue*mask[mx][my]);
+            res+=((int)(green*mask[mx][my]))<<8;
+            res+=((int)(red*mask[mx][my]))<<16;
+            
+            
+        }
+        return res;
     }
 }

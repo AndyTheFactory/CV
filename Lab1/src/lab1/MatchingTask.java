@@ -8,6 +8,7 @@ package lab1;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import javax.imageio.ImageIO;
 
 /**
  *
@@ -16,13 +17,21 @@ import java.io.IOException;
 public class MatchingTask
 {
     public static File file;
+    public static File maskfile;
+    public static Mask mask;
+    
     public static void doTask() throws IOException
     {
         file=Lab1Helper.getImageFile();
-        file=Lab1Helper.getMaskFile();
+        maskfile=Lab1Helper.getMaskFile();
         
+        mask=new Mask(maskfile);
+        
+        BufferedImage imgmask=makeHeatMap(ImageIO.read(file));
+        
+        Lab1Helper.writeImageFile(imgmask, file, "_mask1");
     }
-    private BufferedImage makeHeatMap(BufferedImage src,BufferedImage mask)
+    private static BufferedImage makeHeatMap(BufferedImage src)
     {
         int w=src.getWidth(),h=src.getHeight();
         BufferedImage res=new BufferedImage(w, h, src.getType());

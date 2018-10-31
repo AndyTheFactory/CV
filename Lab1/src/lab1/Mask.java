@@ -54,6 +54,6 @@ public class Mask {
             
             
         }
-        return res;
+        return res/pixels.length;
     }
 }

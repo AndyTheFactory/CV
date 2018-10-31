@@ -31,7 +31,10 @@ public class Mask {
             return 0;
         
         boolean withAlphachan=img.getAlphaRaster()!=null;        
-        byte[] pixels=((DataBufferByte) img.getData(new Rectangle(x,y,mask.length,mask[0].length)).getDataBuffer()).getData();
+        int rwidth=(x+mask.length>img.getWidth())?(img.getWidth()-x):mask.length,
+            rheight=(y+mask[0].length>img.getHeight())?(img.getHeight()-y):mask[0].length;
+        
+        byte[] pixels=((DataBufferByte) img.getData(new Rectangle(x,y,rwidth,rheight)).getDataBuffer()).getData();
 
         int res=0;
         

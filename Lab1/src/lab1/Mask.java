@@ -36,7 +36,7 @@ public class Mask {
         
         byte[] pixels=((DataBufferByte) img.getData(new Rectangle(x,y,rwidth,rheight)).getDataBuffer()).getData();
 
-        int res=0;
+        long resb=0,resg=0,resr=0;
         
         for(int i=0,mx=0,my=0;i<pixels.length;mx++){
             if(mx>=mask.length){
@@ -47,13 +47,20 @@ public class Mask {
             int blue=(pixels[i++] & 0xff),
                 green=(pixels[i++] & 0xff),
                 red=(pixels[i++] & 0xff);
-            res+=alpha<<24;
-            res+=(int)(blue*mask[mx][my]);
-            res+=((int)(green*mask[mx][my]))<<8;
-            res+=((int)(red*mask[mx][my]))<<16;
+            int bmask=((int)mask[mx][my]) & 0xff,
+                gmask=((int)mask[mx][my]>>8) & 0xff,
+                rmask=((int)mask[mx][my]>>16) & 0xff;
+            
+            resb+=Math.abs(blue-bmask);
+            resg+=Math.abs(green*gmask);
+            resr+=Math.abs(red*rmask);
             
             
         }
-        return res/pixels.length;
+        resb/=pixels.length;
+        resg/=pixels.length;
+        resr/=pixels.length;
+        
+        return (resb & 0xff)+(resg & 0xff)<<8+(resr & 0xff)<<16;
     }
 }

@@ -30,26 +30,30 @@ public class MatchingTask
         maskfile=Lab1Helper.getMaskFile();
         
         
-        BufferedImage imgmask=maskImage(ImageIO.read(file),500);       
+        BufferedImage imgmask=maskImage(ImageIO.read(file),300);       
         Lab1Helper.writeImageFile(imgmask, file, "mask1");
+        System.out.println("Mask 1 ..done");
         
         MedianFilter median=new MedianFilter(5);
        
         BufferedImage imgmask_median=median.applyFilter(imgmask);
         Lab1Helper.writeImageFile(imgmask_median, file, "mask2");
+        System.out.println("Mask 2 ..done");
         
         imgmask=maskImage(ImageIO.read(file));       
         Lab1Helper.writeImageFile(imgmask, file, "mask3");
+        System.out.println("Mask 3 ..done");
         
         imgmask_median=median.applyFilter(imgmask);
         Lab1Helper.writeImageFile(imgmask_median, file, "mask4");
         
+        System.out.println("Mask 4 ..done");
 
     }
     private static BufferedImage maskImage(BufferedImage src,int resize) throws IOException
     {
         int w=src.getWidth(),h=src.getHeight();
-        Mask mask=new Mask(maskfile);
+        MaskRed mask=new MaskRed(maskfile);
 
         BufferedImage res=new BufferedImage(w, h, src.getType());
         
@@ -71,7 +75,7 @@ public class MatchingTask
             BufferedImage scalemask = new BufferedImage(maskw, maskh , BufferedImage.TYPE_INT_ARGB);
             
             g2d = scalemask.createGraphics();
-            g2d.drawImage(tmpmask, 0, 0, null);
+            g2d.drawImage(tmp, 0, 0, null);
             g2d.dispose();
 
             Mask mask2=new Mask(scalemask);
@@ -99,7 +103,7 @@ public class MatchingTask
     private static BufferedImage maskImage(BufferedImage src) throws IOException
     {
         int w=src.getWidth(),h=src.getHeight();
-        Mask mask=new Mask(maskfile);
+        MaskRed mask=new MaskRed(maskfile);
 
         BufferedImage res=new BufferedImage(w, h, src.getType());
         

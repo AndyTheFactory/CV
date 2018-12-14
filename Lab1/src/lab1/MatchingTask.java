@@ -38,11 +38,11 @@ public class MatchingTask
         BufferedImage imgmask_median=median.applyFilter(imgmask);
         Lab1Helper.writeImageFile(imgmask_median, file, "mask2");
         
-        imgmask=maskImage(ImageIO.read(file));       
-        Lab1Helper.writeImageFile(imgmask, file, "mask3");
+        //imgmask=maskImage(ImageIO.read(file));       
+        //Lab1Helper.writeImageFile(imgmask, file, "mask3");
         
-        imgmask_median=median.applyFilter(imgmask);
-        Lab1Helper.writeImageFile(imgmask_median, file, "mask4");
+        //imgmask_median=median.applyFilter(imgmask);
+        //Lab1Helper.writeImageFile(imgmask_median, file, "mask4");
         
 
     }

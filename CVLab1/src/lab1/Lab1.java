@@ -23,8 +23,8 @@ public class Lab1 {
         
         System.out.println("> ");
         
-        int i=new Scanner(System.in).nextInt();
-        
+        //int i=new Scanner(System.in).nextInt();
+        int i=3;
         switch(i){
             case 1: GaussianTask.doTask();
                 break;

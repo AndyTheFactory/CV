@@ -5,17 +5,16 @@
  */
 package cvlab5;
 
-import static cvlab5.CannyTask.file;
+import static cvlab5.Ransac.ANGLE_TOLERANCE;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 
 /**
  *
@@ -35,12 +34,12 @@ public class CVLab5 {
         
         Ransac rans=new Ransac(100, 5, 20,50);
         
-        File file=new File("images\\Testimg5_edge2.jpg");
+        File file=new File("images\\Testimg2_edge2_connected.jpg");
         
         BufferedImage image=ImageIO.read(file);              
         rans.doRansac(image);
 
-        File file2=new File("images\\Testimg5.jpg");
+        File file2=new File("images\\Testimg2.jpg");
         BufferedImage image2=ImageIO.read(file2);              
         rans.drawLines(image2);
 
@@ -57,6 +56,13 @@ public class CVLab5 {
 
         Lab5Helper.writeImageFile(image2, file, "rans1");
         
+        double angle=Ransac.getAngle(
+                new Line2D.Double(3.68,19.74,15.02,4.3),
+                new Line2D.Double(16.94,4.62,23.06,20.8)
+        );
+        System.out.println(angle);
+                
+                
       
     }
     

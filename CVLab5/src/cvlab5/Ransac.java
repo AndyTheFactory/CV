@@ -210,13 +210,16 @@ public class Ransac {
         return null;
     }
     
-    private double getAngle(Line2D line1, Line2D line2){
+    static public double getAngle(Line2D line1, Line2D line2){
         double angle1 = Math.atan2(line1.getY1() - line1.getY2(),
                                    line1.getX1() - line1.getX2());
         double angle2 = Math.atan2(line2.getY1() - line2.getY2(),
                                    line2.getX1() - line2.getX2());
-        return Math.toDegrees(angle1-angle2);
-
+        double angle = Math.abs(Math.toDegrees(angle1-angle2));
+        
+        if (angle>180) angle-=180;
+                
+        return angle;
     }
     
 }

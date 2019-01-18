@@ -9,7 +9,9 @@ import static cvlab5.Ransac.ANGLE_TOLERANCE;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Polygon;
 import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -43,25 +45,21 @@ public class CVLab5 {
         BufferedImage image2=ImageIO.read(file2);              
         rans.drawLines(image2);
 
+        Lab5Helper.writeImageFile(image2, file, "rans1");
         
         Graphics2D g2d = image2.createGraphics();
         g2d.setColor(Color.yellow);
         g2d.setPaint(Color.yellow);
-        BasicStroke bs = new BasicStroke(5);
+        BasicStroke bs = new BasicStroke(2);
         g2d.setStroke(bs);    
         
-        for(Rectangle r:rans.findRectangles()){
-            g2d.drawRect((int)r.getMinX(),(int)r.getMaxY(), (int)r.getWidth(), (int)r.getHeight());
+        for(Shape s:rans.findRectangles()){
+            //Rectangle r=(Rectangle)s;
+            g2d.drawPolygon((Polygon)s);
+            //g2d.drawRect((int)r.getMinX(),(int)r.getMaxY(), (int)r.getWidth(), (int)r.getHeight());
         }
 
-        Lab5Helper.writeImageFile(image2, file, "rans1");
-        
-        double angle=Ransac.getAngle(
-                new Line2D.Double(3.68,19.74,15.02,4.3),
-                new Line2D.Double(16.94,4.62,23.06,20.8)
-        );
-        System.out.println(angle);
-                
+        Lab5Helper.writeImageFile(image2, file, "rans2");
                 
       
     }

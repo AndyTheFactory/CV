@@ -54,9 +54,9 @@ public class CVLab5 {
         g2d.setStroke(bs);    
         
         for(Shape s:rans.findRectangles()){
-            //Rectangle r=(Rectangle)s;
-            g2d.drawPolygon((Polygon)s);
-            //g2d.drawRect((int)r.getMinX(),(int)r.getMaxY(), (int)r.getWidth(), (int)r.getHeight());
+            Rectangle r=(Rectangle)s;
+            //g2d.drawPolygon((Polygon)s);
+            g2d.drawRect((int)r.getMinX(),(int)r.getMaxY(), (int)r.getWidth(), (int)r.getHeight());
         }
 
         Lab5Helper.writeImageFile(image2, file, "rans2");

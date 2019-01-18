@@ -207,7 +207,7 @@ public class Ransac {
             candidati.remove(muchie4);
             JoinLines(muchie3, muchie4);
             
-            /*
+            
             Point p1=getIntersect(muchie1, muchie2),
                     p2=getIntersect(muchie2, muchie3),
                     p3=getIntersect(muchie3, muchie4),
@@ -254,13 +254,13 @@ public class Ransac {
                     )
             );
             res.add(new Rectangle((int)x1,(int)y2,(int)(x2-x1),(int)(y2-y1)));
-            */
+            
             /*
             res.add(new Polygon(
                      new int[]{p1.x,p2.x,p3.x,p4.x},
                      new int[]{p1.y,p2.y,p3.y,p4.y},
                      4));
-            */
+            
             res.add(new Polygon(
                      new int[]{(int)muchie1.getX1(),(int)muchie1.getX2(),
                                 (int)muchie2.getX1(),(int)muchie2.getX2(),
@@ -271,7 +271,7 @@ public class Ransac {
                                 (int)muchie3.getY1(),(int)muchie3.getY2(),
                                 (int)muchie4.getY1(),(int)muchie4.getY2()},
                      4));
-           
+           */
         }
         return res;
     }

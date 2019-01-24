@@ -9,9 +9,12 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Polygon;
 import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.image.BufferedImage;
 import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 
 /**
@@ -24,8 +27,8 @@ public class Ransac {
     double inliers;
     ArrayList<Line2D> lines;
     int SAMPLEWIDTH;
-    static int ANGLE_TOLERANCE=10;
-    static int DISTANCE_TOLERANCE=15;
+    static int ANGLE_TOLERANCE=12;
+    static int DISTANCE_TOLERANCE=55;
     
     
     public Ransac(int iterations, int threshold, double inliers,int sampleWidth)
@@ -130,25 +133,86 @@ public class Ransac {
         }
         
     }
-    
-    public ArrayList<Rectangle> findRectangles()
+    public static Point getIntersect(Line2D line1, Line2D line2){
+        
+        Point2D s1,d1,s2,d2;
+        s1=line1.getP1();
+        d1=line1.getP2();
+        s2=line2.getP1();
+        d2=line2.getP2();
+        
+        double sNumerator = s1.getY() * d1.getX() + s2.getX() * d1.getY() - s1.getX() * d1.getY() - s2.getY() * d1.getX();
+        double sDenominator = d2.getY() * d1.getX() - d2.getX() * d1.getY();
+
+        // parallel ... 0 or infinite points, or one of the vectors is 0|0
+        if (sDenominator == 0) {
+            return new Point(0,0);
+        }
+
+        double s = sNumerator / sDenominator;
+
+        double t;
+        if (d1.getX() != 0) {
+            t = (s2.getX() + s * d2.getX() - s1.getX()) / d1.getX();
+        } else {
+            t = (s2.getY() + s * d2.getY() - s1.getY()) / d1.getY();
+        }
+
+        Point intersect = new Point((int)(s1.getX() + t * d1.getX()), (int)(s1.getY() + t * d1.getY()));
+
+        return intersect;
+    }
+    public void JoinLines(Line2D line1,Line2D line2)
     {
-        ArrayList<Rectangle> res=new ArrayList<>();
+            if (line1.getP2().distance(line2.getP1())<=DISTANCE_TOLERANCE) {
+                line2.setLine(line1.getP2(), line2.getP2());
+                return;
+            }
+                    
+            if (line1.getP2().distance(line2.getP2())<=DISTANCE_TOLERANCE) {
+                line2.setLine(line2.getP1(), line1.getP2());
+                return;                
+            }
+            if (line1.getP1().distance(line2.getP1())<=DISTANCE_TOLERANCE) {
+                line2.setLine(line1.getP1(), line2.getP2());
+                return;                
+            }
+            if (line1.getP1().distance(line2.getP2())<=DISTANCE_TOLERANCE) {
+                line2.setLine(line2.getP1(), line1.getP1());
+                return;                
+                
+            }
+        
+    }
+    public ArrayList<Shape> findRectangles()
+    {
+        ArrayList<Shape> res=new ArrayList<>();
         for (Line2D line:lines){
             ArrayList<Line2D> candidati=new ArrayList<Line2D>(lines);
             candidati.remove(line);
             
-            Line2D muchie1=findNextMuchie(line, candidati);
-            if (muchie1==null) continue;
-            
             Line2D muchie2=findNextMuchie(line, candidati);
             if (muchie2==null) continue;
-            
-            Line2D muchie3=findNextMuchie(line, candidati);
+            candidati.remove(muchie2);
+            Line2D muchie1=line;
+            JoinLines(muchie1, muchie2);
+                   
+            Line2D muchie3=findNextMuchie(muchie2, candidati);
             if (muchie3==null) continue;
+            candidati.remove(muchie3);
+            JoinLines(muchie2, muchie3);
             
-            Line2D muchie4=findNextMuchie(line, candidati);
+            Line2D muchie4=findNextMuchie(muchie3, candidati);
             if (muchie4==null) continue;
+            candidati.remove(muchie4);
+            JoinLines(muchie3, muchie4);
+            
+            
+            Point p1=getIntersect(muchie1, muchie2),
+                    p2=getIntersect(muchie2, muchie3),
+                    p3=getIntersect(muchie3, muchie4),
+                    p4=getIntersect(muchie4, muchie1)
+                    ;
             double x1=Math.min(
                     Math.min(
                         Math.min(muchie1.getX1(), muchie1.getX2()),
@@ -189,18 +253,35 @@ public class Ransac {
                         Math.max(muchie4.getY1(), muchie4.getY2())
                     )
             );
-            
             res.add(new Rectangle((int)x1,(int)y2,(int)(x2-x1),(int)(y2-y1)));
             
+            /*
+            res.add(new Polygon(
+                     new int[]{p1.x,p2.x,p3.x,p4.x},
+                     new int[]{p1.y,p2.y,p3.y,p4.y},
+                     4));
             
+            res.add(new Polygon(
+                     new int[]{(int)muchie1.getX1(),(int)muchie1.getX2(),
+                                (int)muchie2.getX1(),(int)muchie2.getX2(),
+                                (int)muchie3.getX1(),(int)muchie3.getX2(),
+                                (int)muchie4.getX1(),(int)muchie4.getX2()},
+                     new int[]{(int)muchie1.getY1(),(int)muchie1.getY2(),
+                                (int)muchie2.getY1(),(int)muchie2.getY2(),
+                                (int)muchie3.getY1(),(int)muchie3.getY2(),
+                                (int)muchie4.getY1(),(int)muchie4.getY2()},
+                     4));
+           */
         }
         return res;
     }
     private Line2D findNextMuchie(Line2D fromline, ArrayList<Line2D> candidati)
     {
-        for(Line2D line:lines){
+        for(Line2D line:candidati){
             if ((fromline.getP2().distance(line.getP1())<=DISTANCE_TOLERANCE) ||
-                (fromline.getP2().distance(line.getP2())<=DISTANCE_TOLERANCE)){
+                (fromline.getP2().distance(line.getP2())<=DISTANCE_TOLERANCE) ||
+                (fromline.getP1().distance(line.getP1())<=DISTANCE_TOLERANCE) ||
+                (fromline.getP1().distance(line.getP2())<=DISTANCE_TOLERANCE)){
                 double angle=getAngle(fromline, line);
                 if (Math.abs(90-angle)<=ANGLE_TOLERANCE)
                     return line;

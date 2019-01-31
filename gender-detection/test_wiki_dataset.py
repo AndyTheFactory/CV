@@ -19,16 +19,18 @@ ap.add_argument("-p", "--path", required=True,
 args = ap.parse_args()
 
 # download pre-trained model file (one-time download)
-dwnld_link = "https://s3.ap-south-1.amazonaws.com/arunponnusamy/pre-trained-weights/gender_detection.model"
-model_path = get_file("gender_detection.model", dwnld_link,
-                      cache_subdir="pre-trained", cache_dir=os.getcwd())
+#dwnld_link = "https://s3.ap-south-1.amazonaws.com/arunponnusamy/pre-trained-weights/gender_detection.model"
+#model_path = get_file("gender_detection.model", dwnld_link,
+#                      cache_subdir="pre-trained", cache_dir=os.getcwd())
+
+model_path = "d:/Work/Java/CV/gender-detection/model/mwiki500"
 
 # load model
 model = load_model(model_path)
 
 mat = loadmat(args.path+'/wiki.mat ')
 
-csv_file = open(args.path+'/wiki.csv', mode='w',newline='')
+csv_file = open(args.path+'/wiki_500.csv', mode='w',newline='')
 csvwriter = csv.DictWriter(csv_file, fieldnames=['Filename', 'NrFaces', 'Gender',
                                                     'NrDetFaces', 'GenderDet', 'Confidence','IsDifferent'], delimiter='\t')
 csvwriter.writeheader()

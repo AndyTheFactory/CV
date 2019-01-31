@@ -30,7 +30,7 @@ ap.add_argument("-p", "--plot", type=str, default="plot.png",
 args = ap.parse_args()
 
 # initial parameters
-epochs = 100
+epochs = 50
 lr = 1e-3
 batch_size = 64
 img_dims = (96,96,3)
@@ -39,7 +39,7 @@ data = []
 labels = []
 
 # load image files from the dataset
-image_files = [f for f in glob.glob(args.dataset + "/**/*", recursive=True) if not os.path.isdir(f)] 
+image_files = [f for f in glob.glob(args.dataset + "/**/*.jpg", recursive=True) if not os.path.isdir(f)]
 random.seed(42)
 random.shuffle(image_files)
 
